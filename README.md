@@ -5,4 +5,4 @@ LauzHack 2016 project
 * Frederike Dümbgen 
 * Andreas Finke
 * Majed El Helou
-* Jan Bednarik
+* Jan Bednařík

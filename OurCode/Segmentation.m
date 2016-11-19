@@ -31,6 +31,16 @@ for i=1:n
         X(j+(i-1)*m,:) = refl(i,j,:);
     end
 end
+ 
+% %remove lowest frequencies - only works for odd length of data
+% %does not seem to improve at the moment
+% assert(mod(length(size(X,2)), 2)==1); 
+% mask = ones(1,size(X,2));
+% mask(1:5) = 0; mask(end-4:end) = 0; %without second part the ifft is
+% complex 
+% mask = repmat(mask, size(X, 1), 1);
+% %is ifftshift actually different form fftshift?
+% X = ifft(ifftshift(fftshift(fft(X')).*mask'))';
 
 %Xstd = zscore(X')';
 %Xstd = (X - min(X,[],2)*ones(1,p)) ./ ((max(X,[],2) - min(X,[],2))*ones(1,p));

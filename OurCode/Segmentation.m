@@ -24,10 +24,8 @@ rgb = refl(:,:,[16 8 2]);
 rgb(:) = imadjust(rgb(:),stretchlim(rgb(:),[.01 .99]));
 [n, m, p] = size(refl);
 
-%% Do Principal component analysis
-
+%% Preprocessing
 X = zeros(n*m,p);
-% standardize data 
 for i=1:n
     for j=1:m
         X(j+(i-1)*m,:) = refl(i,j,:);
@@ -36,19 +34,20 @@ end
 
 %Xstd = zscore(X')';
 %Xstd = (X - min(X,[],2)*ones(1,p)) ./ ((max(X,[],2) - min(X,[],2))*ones(1,p));
-%for i=1:n
-%    X = ifft(fft(
-
 Xstd = X ./ (repmat(sqrt(sum(X.^2, 2)),1,p) + eps);
 
-%[features,score,latent,tsquare] = princomp(zscore(X));
-%[maximums,classes] = max(score,[],2);
+%% Do Principal component analysis
+
+[features,score,latent,tsquare] = princomp(zscore(X));
+[maximums,classes] = max(score,[],2);
+figure
+plot(latent,'*')
 
 K = 5;
+
+%% K means classification
+
 [classes, features] = kmeans(Xstd,K,'Display','iter');
-
-%
-
 assert(K == size(features,1));
 figure
 for i=1:K
@@ -57,7 +56,7 @@ for i=1:K
 end
 legend('show')
 
-%[a,b] = hist(classes, unique(classes));
+[a,b] = hist(classes, unique(classes));
 
 classes_img = zeros(n,m,3);
 colors = hsv(p);

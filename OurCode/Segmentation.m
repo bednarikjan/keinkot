@@ -53,7 +53,7 @@ Xstd = X ./ (repmat(sqrt(sum(X.^2, 2)),1,p) + eps);
 figure
 plot(latent,'*')
 
-K = 6;
+K = 5;
 
 %% K means classification
 
@@ -95,7 +95,19 @@ image(rgb)
 %cumsum(latent)./sum(latent);
 
 %% Binary classification of each class
+i = 2
+sum(X((classes==i),:))
 
+%%
 
+figure
+for i=1:K
+    subplot(1,K,i)
+    % Create histogram of this class
+    size(X((classes==i),:))
+    size(sum(X((classes==i),:),2))
+    hist(sum(X((classes==i),:),2),p)
+    title(['Class ',num2str(i)])
+end
 
 

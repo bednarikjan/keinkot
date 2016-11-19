@@ -1,7 +1,7 @@
 close all
 
 %hyperIm = imread('../ortho.tif');
-load('ortho_401x600.mat')
+load('../../../data/ortho_401x600.mat')
 hyperIm = scaledIm;
 % First channel in monochromatic in the 470-650 nm range
 panChannel = hyperIm(:,:,1);
@@ -78,13 +78,60 @@ end
 figure
 %%
 subplot 211
-img_labels=imfilter(double(img_labels),fspecial('gaussian',5));
-imshow(uint8(img_labels))
+% img_labels=imfilter(double(img_labels),fspecial('gaussian',5));
+% imshow(uint8(img_labels))
+imshow(img_labels)
 colorbar
 subplot 212
 image(rgb)
 %cumsum(latent)./sum(latent);
 
+%% Smoothing the cluster asignment.
 
+%%% Morphological operations - do not work as expected -> do not use them
 
+% nbghood = true(4);
+% 
+% % Smooth each cluster separately.
+% for i = 1:K
+%     % Substituting all the labels not corresponding to this class to 0
+%     binClust = classes;
+%     binClust(binClust ~= i) = 0;
+%     % Making this binary (I in {0, 1}^WxH)
+%     label = max(max(binClust));
+%     binClust = binClust / label;
+%     
+%     % Smooth using dilation followed by erosion.
+%     smoothBinClust = imclose(binClust, nbghood);
+%     smoothBinClust = smoothBinClust * label;
+%     binClusters(:, :, i) = smoothBinClust;
+% end
+% 
+% % Merge the clusters again in one 'classes' image
+% smoothedClasses = zeros(size(classes));
+% for i = 1:K
+%     smoothedClasses(binClusters(:, :, i) == i) = i;
+% end
+% 
+% img_lables_smoothed = label2rgb(smoothedClasses');
+% 
+% image(2)
+% subplot(211)
+% imshow(img_labels)
+% subplot(212)
+% imshow(img_lables_smoothed)
 
+%%%  Smoothing using median filter %%%
+
+smoothedClassesMed = medfilt2(classes, [5 5]);
+
+img_lables_smoothed_med = label2rgb(smoothedClassesMed');
+
+image(2)
+subplot(211)
+imshow(img_labels)
+subplot(212)
+imshow(img_lables_smoothed_med)
+
+figure()
+image(rgb)

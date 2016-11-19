@@ -86,19 +86,22 @@ end
 
 figure
 %%
+classes
 subplot 211
 img_labels=imfilter(double(img_labels),fspecial('gaussian',5));
 imshow(uint8(img_labels))
+%surf(classes)
 colorbar
 subplot 212
 image(rgb)
 %cumsum(latent)./sum(latent);
 
 %% Binary classification of each class
-i = 2
-sum(X((classes==i),:))
+nir_imread = uint8(mean(nirIm, 3));
 
-%%
+[shadow, thres] = compute_shadow(uint8(rgb), nir_imread );
+figure
+imshow(shadow)
 
 figure
 for i=1:K

@@ -53,12 +53,18 @@ Xstd = X ./ (repmat(sqrt(sum(X.^2, 2)),1,p) + eps);
 figure
 plot(latent,'*')
 
-K = 5;
+
 
 %% K means classification
+while 1  %until the final cluster is not empty  
+    K = 5;
+    [classes, features] = kmeans(Xstd,K,'Display','iter');
+    %assert(K == size(features,1));
+    if norm(features(K, :)) > 0.8 %full clusters will have a norm close to 1, empty close to 0
+        break
+    end
+end
 
-[classes, features] = kmeans(Xstd,K,'Display','iter');
-assert(K == size(features,1));
 figure
 for i=1:K
     plot(1:size(features,2), features(i,:),'DisplayName',num2str(i))
@@ -104,8 +110,8 @@ figure
 for i=1:K
     subplot(1,K,i)
     % Create histogram of this class
-    size(X((classes==i),:))
-    size(sum(X((classes==i),:),2))
+  %  size(X((classes==i),:))
+  %  size(sum(X((classes==i),:),2))
     hist(sum(X((classes==i),:),2),p)
     title(['Class ',num2str(i)])
 end

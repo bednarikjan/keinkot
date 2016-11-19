@@ -43,7 +43,7 @@ Xstd = X ./ (repmat(sqrt(sum(X.^2, 2)),1,p) + eps);
 figure
 plot(latent,'*')
 
-K = 5;
+K = 6;
 
 %% K means classification
 
@@ -83,6 +83,8 @@ colorbar
 subplot 212
 image(rgb)
 %cumsum(latent)./sum(latent);
+
+%% Binary classification of each class
 
 
 

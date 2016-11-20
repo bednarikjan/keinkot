@@ -1,5 +1,9 @@
-function cost_i = objective(d_i, I_i, I_j)
-    omega = 1:41;
-    g = gamma(omega);
-    cost_i = norm(I_i * exp(d_i*g - I_j));
+% function cost_i = objective(d, g, I_i, I_j)
+%     M = size(d,1);
+%     I_nc_tilde = M * I_i ./ sum(exp(d*g'));
+%     cost_i = sum((I_nc_tilde - I_j).^2);
+% end
+
+function cost_i = objective(d, g, I_i, I_j)
+    cost_i = sum((I_i - d*I_j).^2);
 end

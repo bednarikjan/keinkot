@@ -164,7 +164,7 @@ I_obs = X
 N_nc = 3; % number of non-cloud pixels
 N = m*n;
 M = 10; % number of frames
-g = ones(,1);
+g = ones(p,1);
 
 for class=1:1%K
     pixels = (classes == class);
@@ -179,30 +179,19 @@ for class=1:1%K
     [B, cols] = sort(shadow(classes == class));
     I_nc = X(cols(1:N_nc),:);
     
-    
     d = zeros(M,1);
     for non_cloud_pixel=1:N_nc
-        for pixel = 1:N
-            repmat(d,N).*repmat(g,M);
-            I_nc_tilde = M * I_obs(i,:) ./ sum(exp(d));
+        for pixel = 1:N           
+            I_nc_tilde = M * I_obs(pixel,:) ./ sum(exp(repmat(d,N).*repmat(g,M)));
+            I_nc_j = I_nc(non_cloud_pixel,:);
+            cost = sum(sum((I_nc_tilde - I_nc_j).^2));
+            print(cost)
         end
     end
 end
-        
-        
-    
-    B(1)
-    cols(1)
-    B(2)
-    cols(2)
-    B(3)
-    cols(3)
-    B(end)
-    B(end-1)
     %I_nc_tilde = 
     % Create histogram of this class
   %  size(X((classes==i),:))
   %  size(sum(X((classes==i),:),2))
     %hist(sum(X((classes==i),:),2),p)
     %title(['Class ',num2str(i)])
-end

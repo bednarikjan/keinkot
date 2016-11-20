@@ -115,8 +115,13 @@ rgbCleaned = cleanedImage(:, :, [16 8 2]);
 % rgbCleanedCorrected(:) = imadjust(rgbCleaned(:),stretchlim(rgbCleaned(:),[.01 .99]));
 rgbCleanedCorrected = imadjust(rgbCleaned, [min(rgbCleaned(:)) max(rgbCleaned(:))], [min(rgb(:)) max(rgb(:))]);
 
+imgBefore = refl(:,:,[16 8 2]);
+imgBefore(:) = histeq(imgBefore(:));
+imgAfter = rgbCleanedCorrected;
+imgAfter(:) = histeq(imgAfter(:));
 figure()
-subplot(121)
-imshow(refl(:,:,[16 8 2]))
-subplot(122)
-imshow(rgbCleanedCorrected)
+p1 = subplot(121);
+imshow(imgBefore)
+p2 = subplot(122);
+imshow(imgAfter)
+linkaxes([p1 p2]);

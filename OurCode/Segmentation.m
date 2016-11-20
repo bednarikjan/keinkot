@@ -1,7 +1,7 @@
 close all
 
 %hyperIm = imread('../ortho.tif');
-load('../../../data/ortho_401x600.mat')
+load('ortho_401x600.mat')
 hyperIm = scaledIm;
 % First channel in monochromatic in the 470-650 nm range
 panChannel = hyperIm(:,:,1);
@@ -25,9 +25,9 @@ rgb(:) = imadjust(rgb(:),stretchlim(rgb(:),[.01 .99]));
 
 %% Preprocessing
 X = zeros(n*m,p);
-for i=1:n
+for class=1:n
     for j=1:m
-        X(j+(i-1)*m,:) = refl(i,j,:);
+        X(j+(class-1)*m,:) = refl(class,j,:);
     end
 end
  
@@ -65,8 +65,8 @@ while 1  %until the final cluster is not empty
 end
 
 figure
-for i=1:K
-    plot(1:size(features,2), features(i,:),'DisplayName',num2str(i))
+for class=1:K
+    plot(1:size(features,2), features(class,:),'DisplayName',num2str(class))
     hold on
 end
 legend('show')
@@ -82,9 +82,9 @@ classes(isnan(classes)) = 6;
 img_labels = label2rgb(classes');
 
 %
-for i=1:n
+for class=1:n
     for j=1:m
-        classes_img(i,j,:) = 255.0/10.0*classes(j+(i-1)*m);
+        classes_img(class,j,:) = 255.0/10.0*classes(j+(class-1)*m);
         %classes_img(i,j,:) = colors(classes(j+i*m));
     end
 end
@@ -144,18 +144,65 @@ image(rgb)
 classes = smoothedClassesMed
 
 %% Binary classification of each class
+close all
 nir_imread = uint8(mean(nirIm, 3));
 
 [shadow, thres] = compute_shadow(uint8(rgb), nir_imread );
 figure
-imshow(shadow)
-
+threshold = 0.83;
+mask = shadow < threshold;
 figure
-for i=1:K
-    subplot(1,K,i)
+subplot 211
+imshow(mask)
+subplot 212
+imshow(rgb)
+
+
+I_obs = X
+
+%figure
+N_nc = 3; % number of non-cloud pixels
+N = m*n;
+M = 10; % number of frames
+g = ones(,1);
+
+for class=1:1%K
+    pixels = (classes == class);
+    %subplot(1,K,i)
+    indices_in_cloud = ((classes==class)'.*mask)==1;
+    pixels_in_cloud = X(indices_in_cloud,:);
+    indices_no_cloud = ((classes==class)'.*mask)==0;
+    pixels_no_cloud = X(indices_no_cloud,:);
+    assert(size(pixels_in_cloud,1) + size(pixels_no_cloud, 1)==n*m)
+    
+    % choose N_nc non clouded points 
+    [B, cols] = sort(shadow(classes == class));
+    I_nc = X(cols(1:N_nc),:);
+    
+    
+    d = zeros(M,1);
+    for non_cloud_pixel=1:N_nc
+        for pixel = 1:N
+            repmat(d,N).*repmat(g,M);
+            I_nc_tilde = M * I_obs(i,:) ./ sum(exp(d));
+        end
+    end
+end
+        
+        
+    
+    B(1)
+    cols(1)
+    B(2)
+    cols(2)
+    B(3)
+    cols(3)
+    B(end)
+    B(end-1)
+    %I_nc_tilde = 
     % Create histogram of this class
   %  size(X((classes==i),:))
   %  size(sum(X((classes==i),:),2))
-    hist(sum(X((classes==i),:),2),p)
-    title(['Class ',num2str(i)])
+    %hist(sum(X((classes==i),:),2),p)
+    %title(['Class ',num2str(i)])
 end

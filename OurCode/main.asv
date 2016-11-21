@@ -1,0 +1,131 @@
+%hyperIm = imread('../ortho.tif');
+load('ortho_401x600.mat')
+hyperIm = scaledIm;
+%hyperIm = hyperIm(200:300, 300:470, :);
+hyperIm = hyperIm(:,4:end,:);
+% First channel in monochromatic in the 470-650 nm range
+panChannel = hyperIm(:,:,1);
+% Image coming from the VIS camera 470-650 nm
+visIm = hyperIm(:,:,2:17);
+% Image coming from the NIR camera 650-950 nm
+nirIm = hyperIm(:,:,18:42);
+% alpha channel of the image
+alpha = hyperIm(:,:,43);
+%% Regroup VIS and NIR images into reflectance structure, convert alpha to logical
+refl = single(cat(3, visIm, nirIm));
+alpha = alpha > 0;
+%hyper.refl = bsxfun(@rdivide, hyper.refl, max(max(hyper.refl)));
+% Scale integer data to 0..1 reflectance range
+refl = (refl - min(refl(:))) / (max(refl(:)) - min(refl(:)));
+
+%% Compute RGB, extract Refl size
+rgb_corrected = refl(:,:,[16 8 2]);
+rgb_corrected(:) = imadjust(rgb_corrected(:),stretchlim(rgb_corrected(:),[.01 .99]));
+[n, m, p] = size(refl);
+
+%% Preprocessing
+
+X = zeros(n*m,p);
+
+for i=1:n
+    for j=1:m
+        X(j+(i-1)*m,:) = refl(i,j,:);
+    end
+end
+
+%Xstd = zscore(X')';
+%Xstd = (X - min(X,[],2)*ones(1,p)) ./ ((max(X,[],2) - min(X,[],2))*ones(1,p));
+Xstd = X ./ (repmat(sqrt(sum(X.^2, 2)),1,p) + eps);
+
+%% K means classification
+while 1  %until the final cluster is not empty  
+    K = 5;
+    [classes, features] = kmeans(Xstd,K,'Display','iter');
+    %assert(K == size(features,1));
+    if norm(features(K, :)) > 0.8 %full clusters will have a norm close to 1, empty close to 0
+        break
+    end
+end
+
+fig=figure
+for class=1:K
+    plot(1:size(features,2), features(class,:),'DisplayName',num2str(class))
+    hold on
+end
+legend('show')
+
+[a,b] = hist(classes, unique(classes));
+
+classes = reshape(classes, m, n)';
+img_labels = label2rgb(classes);
+
+
+%% Smoothing the cluster asignment.
+%%%  Smoothing using median filter %%%
+smoothedClassesMed = medfilt2(classes, [5 5]);
+
+img_lables_smoothed_med = label2rgb(smoothedClassesMed);
+image(2)
+subplot(121)
+imshow(img_labels)
+title('segmentation')
+subplot(122)
+imshow(img_lables_smoothed_med)
+title('smoothed segmentation')
+savefig(fig,'results/clustering.fig')
+
+% Rewriting the original classes with smoothed ones.
+classes = smoothedClassesMed;
+
+%% Binary classification of each class
+%close all
+nir_imread = uint8(mean(nirIm, 3));
+
+[shadow, thres] = compute_shadow(uint8(rgb_corrected), nir_imread );
+threshold = 0.83;
+maybe_cloud = shadow < threshold;
+fig=figure
+subplot 121
+imshow(maybe_cloud)
+title('global shadowmask');
+subplot 122
+imshow(rgb_corrected)
+title('rgb image');
+
+%% Remove the shadows
+
+% Get some shit needed for shadow mask computation.
+visIm = hyperIm(:,:,2:17);
+nirIm = hyperIm(:,:,18:42);
+alpha = hyperIm(:,:,43);
+% Reflectance - the image which we actually work with, 41 channels.
+refl = single(cat(3, visIm, nirIm));
+refl = (refl - min(refl(:))) / (max(refl(:)) - min(refl(:)));
+nirIm = hyperIm(:,:,18:42);
+nir_imread = uint8(mean(nirIm, 3));
+rgb = refl(:,:,[16 8 2]);
+rgb(:) = imadjust(rgb(:),stretchlim(rgb(:),[.01 .99]));
+
+% Get shadow mask.
+[shadow, thres] = compute_shadow(uint8(rgb), nir_imread );
+
+cleanedImage = clean_clouds_simple(refl, shadow, classes);
+
+rgbCleaned = cleanedImage(:, :, [16 8 2]);
+
+%% Compute RGB, extract Refl size
+% rgbCleanedCorrected(:) = imadjust(rgbCleaned(:),stretchlim(rgbCleaned(:),[.01 .99]));
+rgbCleanedCorrected = imadjust(rgbCleaned, [min(rgbCleaned(:)) max(rgbCleaned(:))], [min(rgb(:)) max(rgb(:))]);
+
+imgBefore = refl(:,:,[16 8 2]);
+imgBefore(:) = histeq(imgBefore(:));
+imgAfter = rgbCleanedCorrected;
+imgAfter(:) = histeq(imgAfter(:));
+figure()
+p1 = subplot(121);
+imshow(imgBefore)
+title('original')
+p2 = subplot(122);
+imshow(imgAfter)
+
+linkaxes([p1 p2]);

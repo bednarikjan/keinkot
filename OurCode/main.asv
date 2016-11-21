@@ -124,8 +124,8 @@ imgAfter(:) = histeq(imgAfter(:));
 figure()
 p1 = subplot(121);
 imshow(imgBefore)
-title('cloudy image')
+title('original')
 p2 = subplot(122);
 imshow(imgAfter)
-title('our solution')
+
 linkaxes([p1 p2]);
